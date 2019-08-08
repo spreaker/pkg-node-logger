@@ -85,8 +85,8 @@ module.exports = class Logger {
     }
 
     _log(loglevel, message, props) {
-        // Add loglevel and context to props for log message.
-        props = {...this._context, ...props, loglevel: loglevel.toUpperCase()};
+        // Add context to props for this message.
+        props = {...this._context, ...props};
 
         // In order to avoid possbile sub-prop type-mismatch issues when ingesting
         // logs into ElasticSearch, we make sure all properties are strings.
