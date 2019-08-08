@@ -1,0 +1,22 @@
+{
+    "name": "@spreaker/node-logger",
+    "version": "1.0.0",
+    "description": "Pino-based wrapper with some extra capabilities.",
+    "main": "index.js",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/spreaker/pkg-node-logger.git"
+    },
+    "keywords": [
+        "logging"
+    ],
+    "author": "Manuel Fernandez <manuelflara@spreaker.com>",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/spreaker/pkg-node-logger/issues"
+    },
+    "homepage": "https://github.com/spreaker/pkg-node-logger#readme",
+    "dependencies": {
+        "pino": "^5.13.1"
+    }
+}
