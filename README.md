@@ -1,17 +1,17 @@
 # Spreaker Node Logger
 
-Pino-based Logger class that we use in all of Spraeker's nodeJS projects.
+Pino-based Logger class that we use in all of Spreaker's nodeJS projects.
 
 
 ## Install package
 
-`npm install @spreaker/node-logger`
+`npm install @spreaker/logger`
 
 
 ## Usage
 
 ```js
-const Logger = require("@spreaker/node-logger");
+const Logger = require("@spreaker/logger");
 
 // Create logger with some context that will be used in all messages.
 var logger = new Logger("info", { type: "myservice" });

@@ -1,5 +1,5 @@
 {
-    "name": "@spreaker/node-logger",
+    "name": "@spreaker/logger",
     "version": "1.0.0",
     "description": "Pino-based wrapper with some extra capabilities.",
     "main": "index.js",
