@@ -25,3 +25,13 @@ logger.error("Something happened", new Error("Explanation"));
 // objProp will be automatically JSON.stringified before being logged
 logger.info("Log this", { objProp: { key: "value" } });
 ```
+
+
+## Logging errors
+
+If you pass an `Error` object as prop to `Logger.error(message, props)`, it will get deconstructed into several properties:
+
+- `error_message` for `error.message`
+- `error_code` for `error.code` (if defined)
+- `error_status` for `error.status` (if defined)
+- `error_stack` for `error.stack` (if defined)

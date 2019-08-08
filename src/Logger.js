@@ -67,13 +67,16 @@ module.exports = class Logger {
     error(message, props = {}) {
         if (props instanceof Error) {
             var error_props = {
-                err_message: props.message
+                error_message: props.message
             };
-            if (props.hasOwnProperty("statusCode")) {
-                error_props.err_code = props.statusCode;
+            if (props.hasOwnProperty("code")) {
+                error_props.error_code = props.code;
+            }
+            if (props.hasOwnProperty("status")) {
+                error_props.error_status = props.status;
             }
             if (props.hasOwnProperty("stack")) {
-                error_props.err_stack = props.stack;
+                error_props.error_stack = props.stack;
             }
             props = error_props;
         }
