@@ -7,16 +7,14 @@ module.exports = class Logger {
     /**
      * @param {string} loglevel  Accepted values: fatal | error | warn | info | debug | trace
      * @param {object} context   Common props to add to all logged messages.
-     * @param {object} logger    Pino instance to use, if null create a new one (default).
      */
-    constructor(loglevel = "info", context = {}, logger = null) {
-        this._logger = logger || pino({
+    constructor(loglevel = "info", context = {}) {
+        this._logger = pino({
             messageKey: "message",
             base:       null,
             timestamp:  true,
             level:      loglevel
         });
-        this.setLogLevel(loglevel);
         this.setContext(context);
     }
 
@@ -50,12 +48,12 @@ module.exports = class Logger {
     }
 
     /**
-     * Creates a child logger from the current one, inherting
+     * Creates a child logger from the current one, inherting all of parent logger context.
      *
-     * @param {object} context   Common props to add to all logged messages.
+     * @param {object} context   Common props to add to current context.
      */
-    child(options) {
-        return new Logger(this._logger.level, this._context, this._logger.child(options));
+    child(context) {
+        return new Logger(this._logger.level, {...this._context, ...context});
     }
 
     info(message, props = {}) {
@@ -69,13 +67,13 @@ module.exports = class Logger {
     error(message, props = {}) {
         if (props instanceof Error) {
             var error_props = {
-                error_message: props.message
+                err_message: props.message
             };
             if (props.hasOwnProperty("statusCode")) {
-                error_props.error_code = props.statusCode;
+                error_props.err_code = props.statusCode;
             }
             if (props.hasOwnProperty("stack")) {
-                error_props.error_stack = props.stack;
+                error_props.err_stack = props.stack;
             }
             props = error_props;
         }
