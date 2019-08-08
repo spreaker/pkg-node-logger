@@ -10,7 +10,7 @@ Pino-based Logger class that we use in all of Spraeker's nodeJS projects.
 
 ## Usage
 
-```
+```js
 const Logger = require("@spreaker/node-logger");
 
 // Create logger with some context that will be used in all messages.
