@@ -9,12 +9,8 @@ module.exports = class Logger {
      * @param {object} context   Common props to add to all logged messages.
      */
     constructor(loglevel = "info", context = {}) {
-        this._logger = pino({
-            messageKey: "message",
-            base:       null,
-            timestamp:  true,
-            level:      loglevel
-        });
+        this._logger       = this._createLogger(loglevel);
+        this._accessLogger = null;
         this.setContext(context);
     }
 
@@ -92,24 +88,38 @@ module.exports = class Logger {
      * not casting all props as strings, since we use a few integers there and the format is standard.
      */
     access(props = {}) {
-        this._log("info", undefined, props, "access", false);
+        // We have a separate logger for access logs (only if our app needs to) since we
+        // log them as INFO but we want them written regardless of logger log level set.
+        if (null === this._accessLogger) {
+            this._accessLogger = this._createLogger("info");
+        }
+        props = {...this._context, ...props, loglevel: "INFO", context: "access"};
+
+        this._accessLogger.info({...this._context, ...props});
     }
 
-    _log(loglevel, message, props, type = "app", stringifyProps = true) {
+    _log(loglevel, message, props) {
         // Add loglevel and context to props for log message.
-        props = {...this._context, ...props, loglevel: loglevel.toUpperCase(), context: type};
+        props = {...this._context, ...props, loglevel: loglevel.toUpperCase(), context: "app"};
 
         // In order to avoid possbile sub-prop type-mismatch issues when ingesting
         // logs into ElasticSearch, we make sure all properties are strings.
-        if (stringifyProps) {
-            for (var prop in props) {
-                if (typeof props[prop] === "object" || props[prop] instanceof Array) {
-                    props[prop] = JSON.stringify(props[prop]);
-                } else {
-                    props[prop] = String(props[prop]);
-                }
+        for (var prop in props) {
+            if (typeof props[prop] === "object" || props[prop] instanceof Array) {
+                props[prop] = JSON.stringify(props[prop]);
+            } else {
+                props[prop] = String(props[prop]);
             }
         }
         this._logger[loglevel]({...this._context, ...props}, message);
+    }
+
+    _createLogger(loglevel) {
+        return pino({
+            messageKey: "message",
+            base:       null,
+            timestamp:  true,
+            level:      loglevel
+        });
     }
 }
