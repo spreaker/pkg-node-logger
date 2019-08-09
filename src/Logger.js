@@ -87,17 +87,27 @@ module.exports = class Logger {
         this._log("debug", message, props);
     }
 
-    _log(loglevel, message, props) {
+    /**
+     * Helper method to record access logs. We want these with no message, context: "access" and
+     * not casting all props as strings, since we use a few integers there and the format is standard.
+     */
+    access(props = {}) {
+        this._log("info", undefined, props, "access", false);
+    }
+
+    _log(loglevel, message, props, type = "app", stringifyProps = true) {
         // Add loglevel and context to props for log message.
-        props = {...this._context, ...props, loglevel: loglevel.toUpperCase()};
+        props = {...this._context, ...props, loglevel: loglevel.toUpperCase(), context: type};
 
         // In order to avoid possbile sub-prop type-mismatch issues when ingesting
         // logs into ElasticSearch, we make sure all properties are strings.
-        for (var prop in props) {
-            if (typeof props[prop] === "object" || props[prop] instanceof Array) {
-                props[prop] = JSON.stringify(props[prop]);
-            } else {
-                props[prop] = String(props[prop]);
+        if (stringifyProps) {
+            for (var prop in props) {
+                if (typeof props[prop] === "object" || props[prop] instanceof Array) {
+                    props[prop] = JSON.stringify(props[prop]);
+                } else {
+                    props[prop] = String(props[prop]);
+                }
             }
         }
         this._logger[loglevel]({...this._context, ...props}, message);
