@@ -93,9 +93,8 @@ module.exports = class Logger {
         if (null === this._accessLogger) {
             this._accessLogger = this._createLogger("info");
         }
-        props = {...this._context, ...props, loglevel: "INFO", context: "access"};
 
-        this._accessLogger.info({...this._context, ...props});
+        this._accessLogger.info({...this._context, ...props, loglevel: "INFO", context: "access"});
     }
 
     _log(loglevel, message, props) {
