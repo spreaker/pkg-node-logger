@@ -23,7 +23,7 @@ describe("Logger", () => {
             const logger = createLogger({ type: "test", context: "app"});
             logger.info({"test":"whitelist","time":123,"pid":321}, "Don't transform whitelist");
         });
-        it("should stringify objects or array and transform other types into string before logging INFO", (done) => {
+        it("should stringify objects or array and transform other types into string before log INFO", (done) => {
             spyOn(process.stdout,"write").and.callFake(log => {
                 expect(log).toContain(
                     '"test":"stringify_info","object":"{\\\"b\\\":123}","string":"c","number":"321","array":"[\\\"a\\\",1,[\\\"subarray\\\"]]"'
@@ -33,7 +33,7 @@ describe("Logger", () => {
             const logger = createLogger({ type: "test", context: "app"});
             logger.info({"test":"stringify_info","object":{"b":123},"string":"c","number":321,"array":["a",1,["subarray"]]}, "Stringify log");
         });
-        it("should stringify objects or array and transform other types into string before logging WARN", (done) => {
+        it("should stringify objects or array and transform other types into string before log WARN", (done) => {
             spyOn(process.stdout,"write").and.callFake(log => {
                 expect(log).toContain(
                     '"test":"stringify_warn","object":"{\\\"b\\\":123}","string":"c","number":"321","array":"[\\\"a\\\",1,[\\\"subarray\\\"]]"'
@@ -51,7 +51,7 @@ describe("Logger", () => {
                 done();
             });
             const logger = createLogger({ type: "test", context: "app"});
-            logger.warn({"test":"stringify_null","a": null, "b": true}, "Don't transform whitelist");
+            logger.warn({"test":"stringify_null","a": null, "b": true}, "Transform null or boolean");
         });
         it("should stringify functions", (done) => {
             spyOn(process.stdout,"write").and.callFake(log => {
@@ -76,7 +76,7 @@ describe("Logger", () => {
             const logger = createLogger({ type: "test", context: "access"});
             logger.info({"test":"access_initial_properties"}, "Initial properties");
         });
-        it("should not stringify objects or array and not transform other types into string before logging INFO", (done) => {
+        it("should not stringify objects or array and not transform other types into string before log INFO", (done) => {
             spyOn(process.stdout,"write").and.callFake(log => {
                 expect(log).toContain(
                     '"test":"not_stringify_info","object":{\"b\":123},"string":"c","number":321,"array":[\"a\",1,[\"subarray\"]]'
@@ -84,9 +84,9 @@ describe("Logger", () => {
                 done();
             });
             const logger = createLogger({ type: "test", context: "access"});
-            logger.info({"test":"not_stringify_info","object":{"b":123},"string":"c","number":321,"array":["a",1,["subarray"]]}, "Stringify log");
+            logger.info({"test":"not_stringify_info","object":{"b":123},"string":"c","number":321,"array":["a",1,["subarray"]]}, "Don't stringify log");
         });
-        it("should not stringify objects or array and not transform other types into string before logging WARN", (done) => {
+        it("should not stringify objects or array and not transform other types into string before log WARN", (done) => {
             spyOn(process.stdout,"write").and.callFake(log => {
                 expect(log).toContain(
                     '"test":"not_stringify_warn","object":{\"b\":123},"string":"c","number":321,"array":[\"a\",1,[\"subarray\"]]'
@@ -94,7 +94,7 @@ describe("Logger", () => {
                 done();
             });
             const logger = createLogger({ type: "test", context: "access"});
-            logger.warn({"test":"not_stringify_warn","object":{"b":123},"string":"c","number":321,"array":["a",1,["subarray"]]}, "Stringify log");
+            logger.warn({"test":"not_stringify_warn","object":{"b":123},"string":"c","number":321,"array":["a",1,["subarray"]]}, "Don't stringify log");
         });
     })
 });
