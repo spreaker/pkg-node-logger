@@ -17,11 +17,12 @@ It's possible to create 2 different instances of the logger:
 ```js
 const { createLogger } = require("@spreaker/logger");
 
-// Create logger passing the logLevel and the initial properties. 
+// Create logger passing the initial properties and the logLevel. 
 // Mandatory properties are: 
 // - `type` (name of application is using the logger)
 // - `context` (type of logger to create: "app" or "access")
-const logger = createLogger({ type: "test", context: "app"});
+// Default logLevel if not passed is "info".
+const logger = createLogger({ type: "test", context: "app"}, "info");
 
 // Use the logger as a simple `Pino` child instance.
 logger.info({a: "b", c: 123}, "Message to log");
