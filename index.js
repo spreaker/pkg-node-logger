@@ -34,14 +34,22 @@ serializers[Symbol.for('pino.*')] = ( obj ) => {
 /**
 * Factory to create the logger
 *
-* @param {string} type    Which type of logger you want to create: "app" or "access"
+* @param {Object} props Logger initial configuration
+* @param {string} props.type Name of application is using the Logger
+* @param {string} props.context Which Logger user want to create: "app" or "access"
 */
-const createLogger = (type = "app") => {
+const createLogger = (props, level) => {
+    const options = {
+        messageKey: "message",
+        base: null,
+        timestamp: true,
+        level: level || "info",
+    }
     // Add the custom serializer if we are creating an AppLogger
-    const props = type === "app" ? {
-        serializers
-    } : {};
-    return pino(props);
+    if (props.context === "app") {
+        options.serializers = serializers;
+    }
+    return pino(options).child(props);
 };
 
 module.exports = {
