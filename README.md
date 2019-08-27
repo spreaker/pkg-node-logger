@@ -1,6 +1,6 @@
 # Spreaker Node Logger
 
-Pino-based Logger class that we use in all of Spreaker's nodeJS projects. 
+Pino-based Logger that we use in all of Spreaker's nodeJS projects. 
 It's possible to create 2 different instances of the logger:
 
 - `Application Logger`: this is an instance of `Pino Logger`, initialized with `Spreaker's base options`, with a custom serializer that take care of stringify objects and array and transforming other types into string before log.
@@ -59,7 +59,7 @@ This instance is a normal `Pino` child instance, initialized with `Spreaker's ba
 ```js
 logger.info(
     {"object":{"b":123},"string":"c","number":321,"array":["a",1,["subarray"]]}, 
-    "Stringify log"
+    "Don't stringify log"
 );
 ```
 will produce a log like:
