@@ -1,0 +1,34 @@
+{
+    "name": "@spreaker/logger",
+    "version": "1.0.0",
+    "description": "Pino-based wrapper with some extra capabilities.",
+    "engines": {
+        "node": ">=8"
+    },
+    "main": "index.js",
+    "scripts": {
+        "test": "node jasmine.js",
+        "test-watch": "./node_modules/.bin/nodemon --config jasmine-nodemon.json jasmine.js"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/spreaker/pkg-node-logger.git"
+    },
+    "keywords": [
+        "logging"
+    ],
+    "author": "Manuel Fernandez <manuelflara@spreaker.com>",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/spreaker/pkg-node-logger/issues"
+    },
+    "homepage": "https://github.com/spreaker/pkg-node-logger#readme",
+    "dependencies": {
+        "pino": "^5.13.1"
+    },
+    "devDependencies": {
+        "jasmine": "^3.1.0",
+        "minimist": "^1.2.0",
+        "nodemon": "^1.18.7"
+    }
+}

@@ -1,0 +1,10 @@
+{
+    "verbose": true,
+    "watch": [
+        "index.js",
+        "*_spec.js"
+    ],
+    "ignore": [],
+    "ext": "js,json",
+    "delay": 500
+}
