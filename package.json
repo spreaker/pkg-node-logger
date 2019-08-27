@@ -17,7 +17,7 @@
     "keywords": [
         "logging"
     ],
-    "author": "Manuel Fernandez <manuelflara@spreaker.com>",
+    "author": "Spreaker Inc <dev@spreaker.com>",
     "license": "MIT",
     "bugs": {
         "url": "https://github.com/spreaker/pkg-node-logger/issues"
