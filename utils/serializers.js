@@ -1,4 +1,5 @@
 const { getLevelAsString } = require("./levels");
+const parseErrorStack = require("./parseErrorStack");
 
 /**
  * List of default field that should not be transformed by the serializer
@@ -25,6 +26,14 @@ const serializeToString = (key, obj) => {
     }
 };
 
+const getErrorCommonFields = (obj) => {
+    return {
+        error_stack: obj.stackTrace,
+        error_file: obj.fileName,
+        error_line: obj.lineNumber
+    }
+};
+
 /**
  * Serializer to transform Error
  * - if the Error is passed as mergingObject (first param) and the log has already a message (second param)
@@ -36,20 +45,23 @@ const serializeToString = (key, obj) => {
 */
 const serializeError = (arguments) => {
     if (arguments[0] instanceof Error) {
+        const errorStackParsed = parseErrorStack(arguments[0]);
         if (arguments[1]) {
             arguments[0] = {
                 error_message: arguments[0].message,
-                error_stack: arguments[0].stack
+                ...getErrorCommonFields(errorStackParsed)
             };
         } else {
             arguments[1] = arguments[0].message;
-            arguments[0] = {
-                error_stack: arguments[0].stack
-            };
+            arguments[0] = getErrorCommonFields(errorStackParsed);
         }
     }
     if (arguments[1] instanceof Error) {
-        arguments[0].error_stack = arguments[1].stack;
+        const errorStackParsed = parseErrorStack(arguments[1]);
+        arguments[0] = {
+            ...arguments[0],
+            ...getErrorCommonFields(errorStackParsed)
+        }
         arguments[1] = arguments[1].message;
     }
 }

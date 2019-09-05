@@ -24,7 +24,8 @@
     },
     "homepage": "https://github.com/spreaker/pkg-node-logger#readme",
     "dependencies": {
-        "pino": "^5.13.1"
+        "pino": "^5.13.1",
+        "stack-trace": "^0.0.10"
     },
     "devDependencies": {
         "jasmine": "^3.1.0",

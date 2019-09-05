@@ -4,11 +4,13 @@ describe("Logger", () => {
 
     ["app","access"].forEach(context => {
         describe(`serialize Errors for ${context} logger`, () => {
-            it("should add error_stack and error_message if log message is present", (done) => {
+            it("should add common error fields and error_message if log message is present", (done) => {
                 spyOn(process.stdout,"write").and.callFake(log => {
                     expect(log).toContain('"message":"Error with log message"');
                     expect(log).toContain('"error_stack":"Error: This is an error');
                     expect(log).toContain('"error_message":"This is an error');
+                    expect(log).toContain('"error_file"');
+                    expect(log).toContain('"error_line"');
                     expect(log).not.toContain('"stack"');
                     done();
                 });
@@ -16,10 +18,12 @@ describe("Logger", () => {
                 logger.error(new Error("This is an error"), "Error with log message");
             });
 
-            it("should add error_stack and use Error.message as message if log message is not present", (done) => {
+            it("should add common error fields and use Error.message as message if log message is not present", (done) => {
                 spyOn(process.stdout,"write").and.callFake(log => {
                     expect(log).toContain('"message":"Error without log message"');
                     expect(log).toContain('"error_stack":"Error: Error without log message');
+                    expect(log).toContain('"error_file"');
+                    expect(log).toContain('"error_line"');
                     expect(log).not.toContain('"error_message"');
                     expect(log).not.toContain('"stack"');
                     done();
@@ -28,11 +32,13 @@ describe("Logger", () => {
                 logger.error(new Error("Error without log message"));
             });
 
-            it("should add error_stack and use Error.message as message if log message is the Error", (done) => {
+            it("should add common error fields and use Error.message as message if log message is the Error", (done) => {
                 spyOn(process.stdout,"write").and.callFake(log => {
                     expect(log).toContain('"a":"b"');
                     expect(log).toContain('"message":"Error as log message"');
                     expect(log).toContain('"error_stack":"Error: Error as log message');
+                    expect(log).toContain('"error_file"');
+                    expect(log).toContain('"error_line"');
                     expect(log).not.toContain('"error_message"');
                     expect(log).not.toContain('"stack"');
                     done();
@@ -45,6 +51,8 @@ describe("Logger", () => {
                 spyOn(process.stdout,"write").and.callFake(log => {
                     expect(log).toContain('"message":"Error of child logger"');
                     expect(log).toContain('"error_stack":"Error: This is an error');
+                    expect(log).toContain('"error_file"');
+                    expect(log).toContain('"error_line"');
                     expect(log).toContain('"error_message":"This is an error');
                     expect(log).not.toContain('"stack"');
                     done();

@@ -75,30 +75,41 @@ will produce a log like:
 ## Errors serializer
 When you pass an error to the logger the possible scenarios are:
 
-- the Error is passed as `mergingObject` (first param) and the log has already a `message` (second param). In this case the logger add fields `"error_message": Error.message` and `"error_stack": Error.stack` to the `mergingObject` and the log message is printed in the `message` field
+- the Error is passed as `mergingObject` (first param) and the log has already a `message` (second param). In this case the logger add field `"error_message": Error.message` and [common error fields](#common-error-fields) to the `mergingObject` and the log message is printed in the `message` field
 ```js
 logger.error(new Error("This is an error"), "Error with log message");
 ```
 will produce a log like:
 ```
-{"level":50,"time":1567688722065,"type":"test","context":"app","error_message":"This is an error","error_stack":"Error: This is an error...","loglevel":"ERROR","message":"Error with log message","v":1}
+{"level":50,"time":1567688722065,"type":"test","context":"app","error_message":"This is an error","error_stack":"Error: This is an error...","error_file":"...","error_line":"...","loglevel":"ERROR","message":"Error with log message","v":1}
 ```
 
-- the Error is passed as `mergingObject` (first param) and the log has not a `message` (second param). In this case the logger add field `"error_stack": Error.stack` to the `mergingObject` and use the `Error.message` as log `message`
+- the Error is passed as `mergingObject` (first param) and the log has not a `message` (second param). In this case the logger add [common error fields](#common-error-fields) to the `mergingObject` and use the `Error.message` as log `message`
 ```js
 logger.error(new Error("Error without log message");
 ```
 will produce a log like:
 ```
-{"level":50,"time":1567688853208,"type":"test","context":"app","error_stack":"Error: Error without log message...","loglevel":"ERROR","message":"Error without log message","v":1}
+{"level":50,"time":1567688853208,"type":"test","context":"app","error_stack":"Error: Error without log message...","error_file":"...","error_line":"...","loglevel":"ERROR","message":"Error without log message","v":1}
 ```
 
 
-- the Error is passed as log `message` (second param). In this case the logger add field `"error_stack": Error.stack` to the mergingObject and use the `Error.message` as log `message`
+- the Error is passed as log `message` (second param). In this case the logger add [common error fields](#common-error-fields) to the mergingObject and use the `Error.message` as log `message`
 ```js
 logger.error({ "a": "b" }, new Error("Error as log message"));
 ```
 will produce a log like:
 ```
-"level":50,"time":1567689070052,"type":"test","context":"app","a":"b","error_stack":"Error: Error as log message...","loglevel":"ERROR","message":"Error as log message","v":1}
+"level":50,"time":1567689070052,"type":"test","context":"app","a":"b","error_stack":"Error: Error as log message...","error_file":"...","error_line":"...","loglevel":"ERROR","message":"Error as log message","v":1}
 ```
+
+### Common error fields
+```js
+{
+    error_stack: "error stack trace",
+    error_file: "path of the file",
+    error_line: "number of the line"
+}
+```
+
+
