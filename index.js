@@ -29,7 +29,13 @@ const createLogger = (props, minLoglevel) => {
         level: minLoglevel ? minLoglevel.toLowerCase() : "info"
     }
 
-    // Add the custom serializers for application logger
+    /**
+     * Add the serializeToString for application logger
+     * We don't do this inside the Proxy because we want
+     * to be able to stringify all the fields, included
+     * the ones passed in the initialization that are not
+     * available in the pino.write
+     */ 
     if (props.context === "app") {
         options.serializers = serializers;
     }
