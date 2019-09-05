@@ -63,6 +63,18 @@ describe("Logger", () => {
             const logger = createLogger({ type: "test", context: "app"});
             logger.warn({"test":"stringify_functions","function": function () {return true}}, "Stringify functions");
         });
+
+        xit("should serialize Error stack", (done) => {
+            // spyOn(process.stdout,"write").and.callFake(log => {
+            //     expect(log).toContain('"message":"This is an error"');
+            //     expect(log).toContain('"error_stack":"Error: This is an error');
+            //     expect(log).not.toContain('"stack"');
+            //     done();
+            // });
+            const logger = createLogger({ type: "test", context: "app"}).child({pippo:"pluto"});
+            logger.error(new Error("This is an error"));
+            done();
+        });
     });
 
     describe("access", () => {
@@ -95,6 +107,16 @@ describe("Logger", () => {
             });
             const logger = createLogger({ type: "test", context: "access"});
             logger.warn({"test":"not_stringify_warn","object":{"b":123},"string":"c","number":321,"array":["a",1,["subarray"]]}, "Don't stringify log");
+        });
+        it("should serialize Error stack", (done) => {
+            spyOn(process.stdout,"write").and.callFake(log => {
+                expect(log).toContain('"message":"This is an error"');
+                expect(log).toContain('"error_stack":"Error: This is an error');
+                expect(log).not.toContain('"stack"');
+                done();
+            });
+            const logger = createLogger({ type: "test", context: "app"});
+            logger.error(new Error("This is an error"));
         });
     })
 });
