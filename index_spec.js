@@ -2,49 +2,104 @@ const { createLogger } = require("./index");
 
 describe("Logger", () => {
 
-    describe("loglevel field", () => {
-        it("should add the correct loglevel string if no mergingObject is passed", (done) => {
-            spyOn(process.stdout,"write").and.callFake(log => {
-                expect(log).toContain(
-                    '"type":"test","context":"app","loglevel":"INFO","message":"Loglevel no mergingObject"'
-                );
-                done();
+    ["app","access"].forEach(context => {
+        describe(`serialize Errors for ${context} logger`, () => {
+            it("should add error_stack and error_message if log message is present", (done) => {
+                spyOn(process.stdout,"write").and.callFake(log => {
+                    expect(log).toContain('"message":"Error with log message"');
+                    expect(log).toContain('"error_stack":"Error: This is an error');
+                    expect(log).toContain('"error_message":"This is an error');
+                    expect(log).not.toContain('"stack"');
+                    done();
+                });
+                const logger = createLogger({ type: "test", context });
+                logger.error(new Error("This is an error"), "Error with log message");
             });
-            const logger = createLogger({ type: "test", context: "app"});
-            logger.info("Loglevel no mergingObject");
+
+            it("should add error_stack and use Error.message as message if log message is not present", (done) => {
+                spyOn(process.stdout,"write").and.callFake(log => {
+                    expect(log).toContain('"message":"Error without log message"');
+                    expect(log).toContain('"error_stack":"Error: Error without log message');
+                    expect(log).not.toContain('"error_message"');
+                    expect(log).not.toContain('"stack"');
+                    done();
+                });
+                const logger = createLogger({ type: "test", context });
+                logger.error(new Error("Error without log message"));
+            });
+
+            it("should add error_stack and use Error.message as message if log message is the Error", (done) => {
+                spyOn(process.stdout,"write").and.callFake(log => {
+                    expect(log).toContain('"a":"b"');
+                    expect(log).toContain('"message":"Error as log message"');
+                    expect(log).toContain('"error_stack":"Error: Error as log message');
+                    expect(log).not.toContain('"error_message"');
+                    expect(log).not.toContain('"stack"');
+                    done();
+                });
+                const logger = createLogger({ type: "test", context });
+                logger.error({ "a": "b" }, new Error("Error as log message"));
+            });
+
+            it("should works also for child logger", (done) => {
+                spyOn(process.stdout,"write").and.callFake(log => {
+                    expect(log).toContain('"message":"Error of child logger"');
+                    expect(log).toContain('"error_stack":"Error: This is an error');
+                    expect(log).toContain('"error_message":"This is an error');
+                    expect(log).not.toContain('"stack"');
+                    done();
+                });
+                const logger = createLogger({ type: "test", context }).child({});
+                logger.error(new Error("This is an error"), "Error of child logger");
+            });
         });
-        it("should add the correct loglevel string if mergingObject is passed", (done) => {
-            spyOn(process.stdout,"write").and.callFake(log => {
-                expect(log).toContain(
-                    '"type":"test","context":"access","a":"b","loglevel":"WARN","message":"Loglevel with mergingObject"'
-                );
-                done();
+    });
+
+    ["app","access"].forEach(context => {
+        describe(`serialize loglevel field for ${context} logger`, () => {
+            it("should add the correct loglevel string if no mergingObject is passed", (done) => {
+                spyOn(process.stdout,"write").and.callFake(log => {
+                    expect(log).toContain(
+                        `"type":"test","context":"${context}","loglevel":"INFO","message":"Loglevel no mergingObject"`
+                    );
+                    done();
+                });
+                const logger = createLogger({ type: "test", context});
+                logger.info("Loglevel no mergingObject");
             });
-            const logger = createLogger({ type: "test", context: "access"});
-            logger.warn({ "a": "b" }, "Loglevel with mergingObject");
-        });
-        it("should add the correct loglevel string if we are logging an error message", (done) => {
-            spyOn(process.stdout,"write").and.callFake(log => {
-                expect(log).toContain(
-                    '"type":"test","context":"app","loglevel":"ERROR","message":"Loglevel with error"'
-                );
-                expect(log).toContain(
-                    '"error_stack":"Error: Loglevel with error'
-                );
-                done();
+            it("should add the correct loglevel string if mergingObject is passed", (done) => {
+                spyOn(process.stdout,"write").and.callFake(log => {
+                    expect(log).toContain(
+                        `"type":"test","context":"${context}","a":"b","loglevel":"WARN","message":"Loglevel with mergingObject"`
+                    );
+                    done();
+                });
+                const logger = createLogger({ type: "test", context });
+                logger.warn({ "a": "b" }, "Loglevel with mergingObject");
             });
-            const logger = createLogger({ type: "test", context: "app"});
-            logger.error(new Error("Loglevel with error"));
-        });
-        it("should add the correct loglevel string for child logger", (done) => {
-            spyOn(process.stdout,"write").and.callFake(log => {
-                expect(log).toContain(
-                    '"type":"test","context":"app","child":"true","loglevel":"INFO","message":"Loglevel with child"'
-                );
-                done();
+            it("should add the correct loglevel string if we are logging an error message", (done) => {
+                spyOn(process.stdout,"write").and.callFake(log => {
+                    expect(log).toContain(
+                        `"type":"test","context":"${context}","error_stack":"Error: Loglevel with error`
+                    );
+                    expect(log).toContain(
+                        '"loglevel":"ERROR","message":"Loglevel with error"'
+                    );
+                    done();
+                });
+                const logger = createLogger({ type: "test", context });
+                logger.error(new Error("Loglevel with error"));
             });
-            const logger = createLogger({ type: "test", context: "app"}).child({ "child": true });
-            logger.info("Loglevel with child");
+            it("should add the correct loglevel string for child logger", (done) => {
+                spyOn(process.stdout,"write").and.callFake(log => {
+                    expect(log).toContain(
+                        `"type":"test","context":"${context}","child":"child property","loglevel":"INFO","message":"Loglevel with child"`
+                    );
+                    done();
+                });
+                const logger = createLogger({ type: "test", context }).child({ "child": "child property" });
+                logger.info("Loglevel with child");
+            });
         });
     });
 
@@ -109,28 +164,6 @@ describe("Logger", () => {
             const logger = createLogger({ type: "test", context: "app"});
             logger.warn({"test":"stringify_functions","function": function () {return true}}, "Stringify functions");
         });
-
-        it("should serialize Error stack", (done) => {
-            spyOn(process.stdout,"write").and.callFake(log => {
-                expect(log).toContain('"message":"This is an error"');
-                expect(log).toContain('"error_stack":"Error: This is an error');
-                expect(log).not.toContain('"stack"');
-                done();
-            });
-            const logger = createLogger({ type: "test", context: "app"});
-            logger.error(new Error("This is an error"));
-        });
-
-        it("should not be possible to overwrite 'type' field", (done) => {
-            spyOn(process.stdout,"write").and.callFake(log => {
-                expect(log).toContain(
-                    '"type":"test","context":"app","type":"test","loglevel":"INFO"'
-                );
-                done();
-            });
-            const logger = createLogger({ type: "test", context: "app"});
-            logger.info({ type: "overwrited" });
-        });
     });
 
     describe("access logger", () => {
@@ -163,28 +196,6 @@ describe("Logger", () => {
             });
             const logger = createLogger({ type: "test", context: "access"});
             logger.warn({"test":"not_stringify_warn","object":{"b":123},"string":"c","number":321,"array":["a",1,["subarray"]]}, "Don't stringify log");
-        });
-
-        it("should serialize Error stack", (done) => {
-            spyOn(process.stdout,"write").and.callFake(log => {
-                expect(log).toContain('"message":"This is an error"');
-                expect(log).toContain('"error_stack":"Error: This is an error');
-                expect(log).not.toContain('"stack"');
-                done();
-            });
-            const logger = createLogger({ type: "test", context: "access"});
-            logger.error(new Error("This is an error"));
-        });
-
-        it("should not be possible to overwrite 'type' field", (done) => {
-            spyOn(process.stdout,"write").and.callFake(log => {
-                expect(log).toContain(
-                    '"type":"test","context":"access","type":"test","loglevel":"INFO"'
-                );
-                done();
-            });
-            const logger = createLogger({ type: "test", context: "access"});
-            logger.info({ type: "overwrited" });
         });
     })
 });

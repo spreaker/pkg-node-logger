@@ -1,46 +1,9 @@
+const { getLevelAsString } = require("./levels");
+
 /**
  * List of default field that should not be transformed by the serializer
 */
 const whitelist = ["time", "pid"];
-
-const getCustomSerializers = (type) => {
-    return {
-        "app": ( obj ) => {
-            Object.keys(obj).forEach(key => {
-                switch(key) {
-                    // Avoid that someone overwrites the type field
-                    // because we use it to detect the application
-                    case "type":
-                        obj.type = type;
-                        break;
-                    // Serializer to add 'error_stack' field
-                    case "stack":
-                        obj["error_stack"] = obj[key];
-                        break;
-                    default:
-                        serializeToString(key, obj);
-                }
-            });
-            return obj;
-        },
-        "access": ( obj ) => {
-            Object.keys(obj).forEach(key => {
-                switch(key) {
-                    // Avoid that someone overwrites the type field
-                    // because we use it to detect the application
-                    case "type":
-                        obj.type = type;
-                        break;
-                    // Serializer to add 'error_stack' field
-                    case "stack":
-                        obj["error_stack"] = obj[key];
-                }
-            });
-            return obj;
-        }
-    }
-};
-
 
 /**
  * Serializer to transform values into string
@@ -62,6 +25,47 @@ const serializeToString = (key, obj) => {
     }
 };
 
+/**
+ * Serializer to transform Error
+ * - if the Error is passed as mergingObject (first param) and the log has already a message (second param)
+ * we add fields "error_message": Error.message and "error_stack": Error.stack to the mergingObject
+ * - if the Error is passed as mergingObject (first param) and the log has not a message (second param)
+ * we add field "error_stack": Error.stack to the mergingObject and use the Error.message as message
+ * - if the Error is passed as message (second param)
+ * we add field "error_stack": Error.stack to the mergingObject and use the Error.message as message
+*/
+const serializeError = (arguments) => {
+    if (arguments[0] instanceof Error) {
+        if (arguments[1]) {
+            arguments[0] = {
+                error_message: arguments[0].message,
+                error_stack: arguments[0].stack
+            };
+        } else {
+            arguments[1] = arguments[0].message;
+            arguments[0] = {
+                error_stack: arguments[0].stack
+            };
+        }
+    }
+    if (arguments[1] instanceof Error) {
+        arguments[0].error_stack = arguments[1].stack;
+        arguments[1] = arguments[1].message;
+    }
+}
+
+/**
+ * Add loglevel field to have a string version of the log level
+ */
+const serializeLogLevel = (levels, arguments) => {
+    if (!arguments[0]) {
+        arguments[0] = {}
+    }
+    arguments[0].loglevel = getLevelAsString(levels, arguments[2]);
+}
+
 module.exports = {
-    getCustomSerializers
+    serializeToString,
+    serializeError,
+    serializeLogLevel
 };

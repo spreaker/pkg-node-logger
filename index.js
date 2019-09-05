@@ -1,18 +1,17 @@
-/* jshint strict: false */
 const pino = require("pino");
-const { getCustomSerializers } = require("./utils/serializers");
-const { getLevelAsString } = require("./utils/levels");
+const { serializeToString, serializeError, serializeLogLevel } = require("./utils/serializers");
 
 /**
  * Replace the standard serializer to be able to transform each log
  * Pino Documentation: https://getpino.io/#/docs/api?id=serializerssymbolfor39pino39-function
 */
-const getSerializers = (props) => {
-    const serializers = {};
-    serializers[Symbol.for('pino.*')] = getCustomSerializers(props.type)[props.context];
-    return serializers;
-};
-
+const serializers = {};
+serializers[Symbol.for('pino.*')] = (obj) =>{
+    Object.keys(obj).forEach(key => {
+        serializeToString(key, obj);
+    });
+    return obj;
+}
 
 /**
 * Factory to create the logger
@@ -20,32 +19,28 @@ const getSerializers = (props) => {
 * @param {Object} props Logger initial configuration
 * @param {string} props.type Name of application is using the Logger
 * @param {string} props.context Which Logger user want to create: "app" or "access"
+* @param {string} minLoglevel minimum level of log enabled: "trace", "debug", "info", "warn", "error", and "fatal"
 */
-const createLogger = (props, level) => {
+const createLogger = (props, minLoglevel) => {
     const options = {
         messageKey: "message",
         base: null,
         timestamp: true,
-        level: level || "info",
-        redact: {
-            // we remove the 'stack' field because overwrited by 'error_stack'
-            paths: ["stack"],
-            remove: true
-        }
+        level: minLoglevel ? minLoglevel.toLowerCase() : "info"
     }
 
-    // Add the custom serializers based on the context
-    options.serializers = getSerializers(props);
+    // Add the custom serializers for application logger
+    if (props.context === "app") {
+        options.serializers = serializers;
+    }
 
     const customPino = new Proxy(pino(options), {
         get: function (target, prop) {
-            // intercept the 'write' fnc to be able to add the loglevel
+            // Proxy the logger and intercept the 'write' fnc to be able to customize the logs
             if(prop.toString() === "Symbol(pino.write)"){
                 return function () {
-                    if (!arguments[0]) {
-                        arguments[0] = {}
-                    }
-                    arguments[0].loglevel = getLevelAsString(this.levels, arguments[2]);
+                    serializeError(arguments);
+                    serializeLogLevel(this.levels, arguments);
                     target[prop].apply(this, arguments);
                 }
             }
