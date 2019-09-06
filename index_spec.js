@@ -63,54 +63,6 @@ describe("Logger", () => {
         });
     });
 
-    ["app","access"].forEach(context => {
-        describe(`serialize loglevel field for ${context} logger`, () => {
-            it("should add the correct loglevel string if no mergingObject is passed", (done) => {
-                spyOn(process.stdout,"write").and.callFake(log => {
-                    expect(log).toContain(
-                        `"type":"test","context":"${context}","loglevel":"INFO","message":"Loglevel no mergingObject"`
-                    );
-                    done();
-                });
-                const logger = createLogger({ type: "test", context});
-                logger.info("Loglevel no mergingObject");
-            });
-            it("should add the correct loglevel string if mergingObject is passed", (done) => {
-                spyOn(process.stdout,"write").and.callFake(log => {
-                    expect(log).toContain(
-                        `"type":"test","context":"${context}","a":"b","loglevel":"WARN","message":"Loglevel with mergingObject"`
-                    );
-                    done();
-                });
-                const logger = createLogger({ type: "test", context });
-                logger.warn({ "a": "b" }, "Loglevel with mergingObject");
-            });
-            it("should add the correct loglevel string if we are logging an error message", (done) => {
-                spyOn(process.stdout,"write").and.callFake(log => {
-                    expect(log).toContain(
-                        `"type":"test","context":"${context}","error_stack":"Error: Loglevel with error`
-                    );
-                    expect(log).toContain(
-                        '"loglevel":"ERROR","message":"Loglevel with error"'
-                    );
-                    done();
-                });
-                const logger = createLogger({ type: "test", context });
-                logger.error(new Error("Loglevel with error"));
-            });
-            it("should add the correct loglevel string for child logger", (done) => {
-                spyOn(process.stdout,"write").and.callFake(log => {
-                    expect(log).toContain(
-                        `"type":"test","context":"${context}","child":"child property","loglevel":"INFO","message":"Loglevel with child"`
-                    );
-                    done();
-                });
-                const logger = createLogger({ type: "test", context }).child({ "child": "child property" });
-                logger.info("Loglevel with child");
-            });
-        });
-    });
-
     ["parent", "child"].forEach(type => {
         describe(`${type} application logger`, () => {
             const getLogger = () => {
@@ -181,6 +133,39 @@ describe("Logger", () => {
                 const logger = getLogger();
                 logger.warn({"test":"stringify_functions","function": function () {return true}}, "Stringify functions");
             });
+            it("should add the correct loglevel string if no mergingObject is passed", (done) => {
+                spyOn(process.stdout,"write").and.callFake(log => {
+                    expect(log).toContain(
+                        `"type":"test","context":"app","loglevel":"INFO","message":"Loglevel no mergingObject"`
+                    );
+                    done();
+                });
+                const logger = createLogger({ type: "test", context: "app"});
+                logger.info("Loglevel no mergingObject");
+            });
+            it("should add the correct loglevel string if mergingObject is passed", (done) => {
+                spyOn(process.stdout,"write").and.callFake(log => {
+                    expect(log).toContain(
+                        `"type":"test","context":"app","a":"b","loglevel":"WARN","message":"Loglevel with mergingObject"`
+                    );
+                    done();
+                });
+                const logger = createLogger({ type: "test", context: "app" });
+                logger.warn({ "a": "b" }, "Loglevel with mergingObject");
+            });
+            it("should add the correct loglevel string if we are logging an error message", (done) => {
+                spyOn(process.stdout,"write").and.callFake(log => {
+                    expect(log).toContain(
+                        `"type":"test","context":"app","error_stack":"Error: Loglevel with error`
+                    );
+                    expect(log).toContain(
+                        '"loglevel":"ERROR","message":"Loglevel with error"'
+                    );
+                    done();
+                });
+                const logger = createLogger({ type: "test", context: "app" });
+                logger.error(new Error("Loglevel with error"));
+            });
         });
     });
 
@@ -223,6 +208,17 @@ describe("Logger", () => {
                 });
                 const logger = getLogger();
                 logger.warn({"test":"not_stringify_warn","object":{"b":123},"string":"c","number":321,"array":["a",1,["subarray"]]}, "Don't stringify log");
+            });
+            it("should not add loglevel field", (done) => {
+                spyOn(process.stdout,"write").and.callFake(log => {
+                    expect(log).toContain(
+                        `"type":"test","context":"access","message":"No loglevel added"`
+                    );
+                    expect(log).not.toContain('"loglevel"');
+                    done();
+                });
+                const logger = createLogger({ type: "test", context: "access"});
+                logger.info("No loglevel added");
             });
         });
     });

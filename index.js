@@ -46,7 +46,9 @@ const createLogger = (props, minLoglevel) => {
             if(prop.toString() === "Symbol(pino.write)"){
                 return function () {
                     serializeError(arguments);
-                    serializeLogLevel(this.levels, arguments);
+                    if (props.context === "app") {
+                        serializeLogLevel(this.levels, arguments);
+                    }
                     target[prop].apply(this, arguments);
                 }
             }
