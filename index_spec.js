@@ -136,7 +136,7 @@ describe("Logger", () => {
             it("should add the correct loglevel string if no mergingObject is passed", (done) => {
                 spyOn(process.stdout,"write").and.callFake(log => {
                     expect(log).toContain(
-                        `"type":"test","context":"app","loglevel":"INFO","message":"Loglevel no mergingObject"`
+                        '"type":"test","context":"app","loglevel":"INFO","message":"Loglevel no mergingObject"'
                     );
                     done();
                 });
@@ -146,7 +146,7 @@ describe("Logger", () => {
             it("should add the correct loglevel string if mergingObject is passed", (done) => {
                 spyOn(process.stdout,"write").and.callFake(log => {
                     expect(log).toContain(
-                        `"type":"test","context":"app","a":"b","loglevel":"WARN","message":"Loglevel with mergingObject"`
+                        '"type":"test","context":"app","a":"b","loglevel":"WARN","message":"Loglevel with mergingObject"'
                     );
                     done();
                 });
@@ -156,7 +156,7 @@ describe("Logger", () => {
             it("should add the correct loglevel string if we are logging an error message", (done) => {
                 spyOn(process.stdout,"write").and.callFake(log => {
                     expect(log).toContain(
-                        `"type":"test","context":"app","error_stack":"Error: Loglevel with error`
+                        '"type":"test","context":"app","error_stack":"Error: Loglevel with error'
                     );
                     expect(log).toContain(
                         '"loglevel":"ERROR","message":"Loglevel with error"'
@@ -165,6 +165,16 @@ describe("Logger", () => {
                 });
                 const logger = createLogger({ type: "test", context: "app" });
                 logger.error(new Error("Loglevel with error"));
+            });
+            it("should add loglevel = DEBUG for trace logs", (done) => {
+                spyOn(process.stdout,"write").and.callFake(log => {
+                    expect(log).toContain(
+                        '"type":"test","context":"app","loglevel":"DEBUG","message":"Replace trace with debug"'
+                    );
+                    done();
+                });
+                const logger = createLogger({ type: "test", context: "app" }, "trace");
+                logger.trace("Replace trace with debug");
             });
         });
     });

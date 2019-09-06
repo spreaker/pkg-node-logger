@@ -47,7 +47,7 @@ const createLogger = (props, minLoglevel) => {
                 return function () {
                     serializeError(arguments);
                     if (props.context === "app") {
-                        serializeLogLevel(this.levels, arguments);
+                        serializeLogLevel(arguments);
                     }
                     target[prop].apply(this, arguments);
                 }

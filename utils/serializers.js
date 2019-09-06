@@ -69,11 +69,11 @@ const serializeError = (arguments) => {
 /**
  * Add loglevel field to have a string version of the log level
  */
-const serializeLogLevel = (levels, arguments) => {
+const serializeLogLevel = (arguments) => {
     if (!arguments[0]) {
         arguments[0] = {}
     }
-    arguments[0].loglevel = getLevelAsString(levels, arguments[2]);
+    arguments[0].loglevel = getLevelAsString(arguments[2]);
 }
 
 module.exports = {
