@@ -1,35 +1,17 @@
 const pino = require("pino");
-
-/**
- * List of default field that should not be transformed by the serializer
-*/
-const whitelist = ["time", "pid"];
+const { serializeToString, serializeError, serializeLogLevel } = require("./utils/serializers");
 
 /**
  * Replace the standard serializer to be able to transform each log
  * Pino Documentation: https://getpino.io/#/docs/api?id=serializerssymbolfor39pino39-function
 */
 const serializers = {};
-serializers[Symbol.for('pino.*')] = ( obj ) => {
+serializers[Symbol.for('pino.*')] = (obj) =>{
     Object.keys(obj).forEach(key => {
-        if (whitelist.indexOf(key) === -1) {
-            // Try to stringify objects/array or transform other types in string
-            try {
-                if (typeof obj[key] === "object" || obj[key] instanceof Array) {
-                    obj[key] = JSON.stringify(obj[key]);
-                } else {
-                    obj[key] = String(obj[key]);
-                }
-            } 
-            // in case of errors just return the current value
-            catch(err) {
-                obj[key] = obj[key];
-            }
-        }
+        serializeToString(key, obj);
     });
     return obj;
-};
-
+}
 
 /**
 * Factory to create the logger
@@ -37,19 +19,44 @@ serializers[Symbol.for('pino.*')] = ( obj ) => {
 * @param {Object} props Logger initial configuration
 * @param {string} props.type Name of application is using the Logger
 * @param {string} props.context Which Logger user want to create: "app" or "access"
+* @param {string} minLoglevel minimum level of log enabled: "trace", "debug", "info", "warn", "error", and "fatal"
 */
-const createLogger = (props, level) => {
+const createLogger = (props, minLoglevel) => {
     const options = {
         messageKey: "message",
         base: null,
         timestamp: true,
-        level: level || "info",
+        level: minLoglevel ? minLoglevel.toLowerCase() : "info"
     }
-    // Add the custom serializer if we are creating an AppLogger
+
+    /**
+     * Add the serializeToString for application logger
+     * We don't do this inside the Proxy because we want
+     * to be able to stringify all the fields, included
+     * the ones passed in the initialization that are not
+     * available in the pino.write
+     */ 
     if (props.context === "app") {
         options.serializers = serializers;
     }
-    return pino(options).child(props);
+
+    const customPino = new Proxy(pino(options), {
+        get: function (target, prop) {
+            // Proxy the logger and intercept the 'write' fnc to be able to customize the logs
+            if(prop.toString() === "Symbol(pino.write)"){
+                return function () {
+                    serializeError(arguments);
+                    if (props.context === "app") {
+                        serializeLogLevel(arguments);
+                    }
+                    target[prop].apply(this, arguments);
+                }
+            }
+            return target[prop];
+        }
+    });
+
+    return customPino.child(props);
 };
 
 module.exports = {

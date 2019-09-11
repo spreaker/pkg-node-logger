@@ -2,6 +2,7 @@
     "verbose": true,
     "watch": [
         "index.js",
+        "/utils/*",
         "*_spec.js"
     ],
     "ignore": [],
