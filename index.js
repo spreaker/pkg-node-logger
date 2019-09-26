@@ -36,7 +36,8 @@ const createLogger = (props, minLoglevel) => {
      * the ones passed in the initialization that are not
      * available in the pino.write
      */ 
-    if (props.context === "app") {
+    const context = props.context.valueOf(); // We clone the value of the props and not use it directly to avoid that this variable has impacted by the serializations
+    if (context === "app") {
         options.serializers = serializers;
     }
 
@@ -46,7 +47,7 @@ const createLogger = (props, minLoglevel) => {
             if(prop.toString() === "Symbol(pino.write)"){
                 return function () {
                     serializeError(arguments);
-                    if (props.context === "app") {
+                    if (context === "app") {
                         serializeLogLevel(arguments);
                     }
                     target[prop].apply(this, arguments);
