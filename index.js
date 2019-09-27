@@ -21,7 +21,7 @@ serializers[Symbol.for('pino.*')] = (obj) =>{
 * @param {string} props.context Which Logger user want to create: "app" or "access"
 * @param {string} minLoglevel minimum level of log enabled: "trace", "debug", "info", "warn", "error", and "fatal"
 */
-const createLogger = (props, minLoglevel) => {
+const createLogger = (props, { minLoglevel, destination } = {}) => {
     const options = {
         messageKey: "message",
         base: null,
@@ -41,7 +41,9 @@ const createLogger = (props, minLoglevel) => {
         options.serializers = serializers;
     }
 
-    const customPino = new Proxy(pino(options), {
+    const destOut = destination ? pino.destination(destination) : null;
+
+    const customPino = new Proxy(pino(options, destOut), {
         get: function (target, prop) {
             // Proxy the logger and intercept the 'write' fnc to be able to customize the logs
             if(prop.toString() === "Symbol(pino.write)"){

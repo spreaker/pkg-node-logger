@@ -1,11 +1,32 @@
+const fs = require("fs");
+const path = require("path");
 const { createLogger } = require("./index");
 
 describe("Logger", () => {
 
+    ["app","access"].forEach(context => {
+        describe(`${context} logger destination`, () => {
+
+            afterEach(() => {
+                fs.unlinkSync(path.join(__dirname, "./logs"));
+            });
+
+            it("should use destination passed as logs output", () => {
+                spyOn(process.stdout,"write").and.callFake(log => {
+                    const logs = fs.readFileSync(path.join(__dirname, "./logs")).toString();
+                    expect(logs).toContain(`"v2_type":"test","v2_context":"${context}"`);
+                    expect(logs).toContain('"v2_message":"Test destination"');
+                });
+                const logger = createLogger({ type: "test", context }, { destination: "./logs" });
+                logger.info("Test destination");
+            });
+        });
+    });
+
     ["parent", "child"].forEach(type => {
         describe(`${type} application logger`, () => {
-            const getLogger = (minLogValue) => {
-                let logger = createLogger({ type: "test", context: "app"}, minLogValue);
+            const getLogger = (minLoglevel) => {
+                let logger = createLogger({ type: "test", context: "app"}, { minLoglevel });
                 if (type === "child") {
                     logger = logger.child({});
                 }
