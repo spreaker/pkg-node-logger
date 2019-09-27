@@ -20,15 +20,22 @@ Both the loggers provide a common functions:
 ```js
 const { createLogger } = require("@spreaker/logger");
 
-// Create logger passing the initial properties and the logLevel. 
+// Create logger passing the initial properties and the options: minLoglevel and destination. 
 // Mandatory properties are: 
 // - `type` (name of application is using the logger)
 // - `context` (type of logger to create: "app" or "access")
-// Minimum level of log enabled; if not passed is "info".
-const logger = createLogger({ type: "test", context: "app"}, "info");
+// Options object is not mandatory:
+// - `minLoglevel` (Minimum level of log enabled; if not passed is "info")
+// - `destination` (Path of logs destination; useful for tests. If not passed STDOUT is the default one)
+const logger = createLogger({ type: "test", context: "app"}, { minLoglevel: "info" });
 
 // Use the logger as a simple `Pino` child instance.
 logger.info({a: "b", c: 123}, "Message to log");
+
+const loggerWithDestination = createLogger({ type: "test", context: "app"}, { destination: "/path/to/file" });
+
+// Logs will be saved into this file: /path/to/file
+loggerWithDestination.info({a: "b", c: 123}, "Message to log");
 ```
 
 ## Logger types

@@ -19,7 +19,9 @@ serializers[Symbol.for('pino.*')] = (obj) =>{
 * @param {Object} props Logger initial configuration
 * @param {string} props.type Name of application is using the Logger
 * @param {string} props.context Which Logger user want to create: "app" or "access"
-* @param {string} minLoglevel minimum level of log enabled: "trace", "debug", "info", "warn", "error", and "fatal"
+* @param {Object} options Logger options
+* @param {string} options.minLoglevel minimum level of log enabled: "trace", "debug", "info", "warn", "error", and "fatal"
+* @param {string} options.destination path of logs destination. If not passed STDOUT is the default one
 */
 const createLogger = (props, { minLoglevel, destination } = {}) => {
     const options = {
