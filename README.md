@@ -3,11 +3,10 @@
 Pino-based Logger that we use in all of Spreaker's nodeJS projects. 
 It's possible to create 2 different instances of the logger:
 
-- `Application Logger`: this is an instance of `Pino Logger`, initialized with `Spreaker's base options`, with a custom serializer that take care of stringify objects and array and transforming other types into string before log.
+- `Application Logger`: this is an instance of `Pino Logger`, initialized with `Spreaker's base options`, with a custom serializer that take care of stringify objects and array and transforming other types into string before log. All the fields are decorated with a prefix `v2_` to make them recognizables. The `Application Logger` add also a `v2_loglevel` field to each log to have a string version of the log level.
 - `Access Logger`: this is an instance of `Pino Logger`, initialized with `Spreaker's base options`.
 
-Both the loggers provide 2 common functions:
-- Add `loglevel` field to each log to have a string version of the log level
+Both the loggers provide a common functions:
 - Errors serializer that take care of set the correct error fields in the logs
 
 
@@ -21,15 +20,22 @@ Both the loggers provide 2 common functions:
 ```js
 const { createLogger } = require("@spreaker/logger");
 
-// Create logger passing the initial properties and the logLevel. 
+// Create logger passing the initial properties and the options: minLoglevel and destination. 
 // Mandatory properties are: 
 // - `type` (name of application is using the logger)
 // - `context` (type of logger to create: "app" or "access")
-// Minimum level of log enabled; if not passed is "info".
-const logger = createLogger({ type: "test", context: "app"}, "info");
+// Options object is not mandatory:
+// - `minLoglevel` (Minimum level of log enabled; if not passed is "info")
+// - `destination` (Path of logs destination; useful for tests. If not passed STDOUT is the default one)
+const logger = createLogger({ type: "test", context: "app"}, { minLoglevel: "info" });
 
 // Use the logger as a simple `Pino` child instance.
 logger.info({a: "b", c: 123}, "Message to log");
+
+const loggerWithDestination = createLogger({ type: "test", context: "app"}, { destination: "/path/to/file" });
+
+// Logs will be saved into this file: /path/to/file
+loggerWithDestination.info({a: "b", c: 123}, "Message to log");
 ```
 
 ## Logger types
@@ -50,7 +56,7 @@ logger.info(
 ```
 will produce a log like:
 ```
-{"level":30,"time":1566908680683,"type":"test","context":"app","object":"{\"b\":123}","string":"c","number":"321","array":"[\"a\",1,[\"subarray\"]]","message":"Stringify log","loglevel":"INFO","v":1}
+{"level":30,"time":1566908680683,"v2_type":"test","v2_context":"app","v2_object":"{\"b\":123}","v2_string":"c","v2_number":"321","v2_array":"[\"a\",1,[\"subarray\"]]","v2_message":"Stringify log","v2_loglevel":"INFO","v":1}
 ```
 
 ### Access logger
@@ -69,7 +75,7 @@ logger.info(
 ```
 will produce a log like:
 ```
-{"level":30,"time":1566908953080,"type":"test","context":"access","object":{"b":123},"string":"c","number":321,"array":["a",1,["subarray"]],"message":"Don't stringify log","loglevel":"INFO","v":1}
+{"level":30,"time":1566908953080,"type":"test","context":"access","object":{"b":123},"string":"c","number":321,"array":["a",1,["subarray"]],"message":"Don't stringify log","v":1}
 ```
 
 ## Errors serializer

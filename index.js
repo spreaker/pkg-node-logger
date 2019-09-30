@@ -19,9 +19,11 @@ serializers[Symbol.for('pino.*')] = (obj) =>{
 * @param {Object} props Logger initial configuration
 * @param {string} props.type Name of application is using the Logger
 * @param {string} props.context Which Logger user want to create: "app" or "access"
-* @param {string} minLoglevel minimum level of log enabled: "trace", "debug", "info", "warn", "error", and "fatal"
+* @param {Object} options Logger options
+* @param {string} options.minLoglevel minimum level of log enabled: "trace", "debug", "info", "warn", "error", and "fatal"
+* @param {string} options.destination path of logs destination. If not passed STDOUT is the default one
 */
-const createLogger = (props, minLoglevel) => {
+const createLogger = (props, { minLoglevel, destination } = {}) => {
     const options = {
         messageKey: "message",
         base: null,
@@ -36,17 +38,20 @@ const createLogger = (props, minLoglevel) => {
      * the ones passed in the initialization that are not
      * available in the pino.write
      */ 
-    if (props.context === "app") {
+    const context = props.context.valueOf(); // We clone the value of the props and not use it directly to avoid that this variable has impacted by the serializations
+    if (context === "app") {
         options.serializers = serializers;
     }
 
-    const customPino = new Proxy(pino(options), {
+    const destOut = destination ? pino.destination(destination) : null;
+
+    const customPino = new Proxy(pino(options, destOut), {
         get: function (target, prop) {
             // Proxy the logger and intercept the 'write' fnc to be able to customize the logs
             if(prop.toString() === "Symbol(pino.write)"){
                 return function () {
                     serializeError(arguments);
-                    if (props.context === "app") {
+                    if (context === "app") {
                         serializeLogLevel(arguments);
                     }
                     target[prop].apply(this, arguments);

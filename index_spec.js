@@ -1,82 +1,51 @@
+const fs = require("fs");
+const path = require("path");
 const { createLogger } = require("./index");
 
 describe("Logger", () => {
 
     ["app","access"].forEach(context => {
-        describe(`serialize Errors for ${context} logger`, () => {
-            it("should add common error fields and error_message if log message is present", (done) => {
-                spyOn(process.stdout,"write").and.callFake(log => {
-                    expect(log).toContain('"message":"Error with log message"');
-                    expect(log).toContain('"error_stack":"Error: This is an error');
-                    expect(log).toContain('"error_message":"This is an error');
-                    expect(log).toContain('"error_file"');
-                    expect(log).toContain('"error_line"');
-                    expect(log).not.toContain('"stack"');
-                    done();
-                });
-                const logger = createLogger({ type: "test", context });
-                logger.error(new Error("This is an error"), "Error with log message");
+        describe(`${context} logger destination`, () => {
+
+            afterEach(() => {
+                fs.unlinkSync(path.join(__dirname, "./logs"));
             });
 
-            it("should add common error fields and use Error.message as message if log message is not present", (done) => {
+            it("should use destination passed as logs output", () => {
                 spyOn(process.stdout,"write").and.callFake(log => {
-                    expect(log).toContain('"message":"Error without log message"');
-                    expect(log).toContain('"error_stack":"Error: Error without log message');
-                    expect(log).toContain('"error_file"');
-                    expect(log).toContain('"error_line"');
-                    expect(log).not.toContain('"error_message"');
-                    expect(log).not.toContain('"stack"');
-                    done();
+                    const logs = fs.readFileSync(path.join(__dirname, "./logs")).toString();
+                    expect(logs).toContain(`"v2_type":"test","v2_context":"${context}"`);
+                    expect(logs).toContain('"v2_message":"Test destination"');
                 });
-                const logger = createLogger({ type: "test", context });
-                logger.error(new Error("Error without log message"));
-            });
-
-            it("should add common error fields and use Error.message as message if log message is the Error", (done) => {
-                spyOn(process.stdout,"write").and.callFake(log => {
-                    expect(log).toContain('"a":"b"');
-                    expect(log).toContain('"message":"Error as log message"');
-                    expect(log).toContain('"error_stack":"Error: Error as log message');
-                    expect(log).toContain('"error_file"');
-                    expect(log).toContain('"error_line"');
-                    expect(log).not.toContain('"error_message"');
-                    expect(log).not.toContain('"stack"');
-                    done();
-                });
-                const logger = createLogger({ type: "test", context });
-                logger.error({ "a": "b" }, new Error("Error as log message"));
-            });
-
-            it("should works also for child logger", (done) => {
-                spyOn(process.stdout,"write").and.callFake(log => {
-                    expect(log).toContain('"message":"Error of child logger"');
-                    expect(log).toContain('"error_stack":"Error: This is an error');
-                    expect(log).toContain('"error_file"');
-                    expect(log).toContain('"error_line"');
-                    expect(log).toContain('"error_message":"This is an error');
-                    expect(log).not.toContain('"stack"');
-                    done();
-                });
-                const logger = createLogger({ type: "test", context }).child({});
-                logger.error(new Error("This is an error"), "Error of child logger");
+                const logger = createLogger({ type: "test", context }, { destination: "./logs" });
+                logger.info("Test destination");
             });
         });
     });
 
     ["parent", "child"].forEach(type => {
         describe(`${type} application logger`, () => {
-            const getLogger = () => {
-                let logger = createLogger({ type: "test", context: "app"});
+            const getLogger = (minLoglevel) => {
+                let logger = createLogger({ type: "test", context: "app"}, { minLoglevel });
                 if (type === "child") {
                     logger = logger.child({});
                 }
                 return logger;
             }
-
+            it("should add 'v2_' prefix to all the fields, except for the whitelisted ones", (done) => {
+                spyOn(process.stdout,"write").and.callFake(log => {
+                    expect(log).toContain(
+                        '"v2_type":"test","v2_context":"app","time":123,"pid":"321","v2_loglevel":"INFO","v2_message":"Add prefix"'
+                    );
+                    done();
+                });
+                const logger = getLogger();
+                logger.info({"time":123,"pid":"321"}, "Add prefix");
+            });
             it("should log the initial properties passed", (done) => {
                 spyOn(process.stdout,"write").and.callFake(log => {
                     expect(log).toContain(
-                        '"type":"test","context":"app","test":"initial_properties"'
+                        '"v2_type":"test","v2_context":"app","v2_test":"initial_properties"'
                     );
                     done();
                 });
@@ -86,17 +55,17 @@ describe("Logger", () => {
             it("should not transform fields in the whitelist", (done) => {
                 spyOn(process.stdout,"write").and.callFake(log => {
                     expect(log).toContain(
-                        '"test":"whitelist","time":123,"pid":321'
+                        '"time":123,"pid":321'
                     );
                     done();
                 });
                 const logger = getLogger();
-                logger.info({"test":"whitelist","time":123,"pid":321}, "Don't transform whitelist");
+                logger.info({"time":123,"pid":321}, "Don't transform whitelist");
             });
             it("should stringify objects or array and transform other types into string before log INFO", (done) => {
                 spyOn(process.stdout,"write").and.callFake(log => {
                     expect(log).toContain(
-                        '"test":"stringify_info","object":"{\\\"b\\\":123}","string":"c","number":"321","array":"[\\\"a\\\",1,[\\\"subarray\\\"]]"'
+                        '"v2_test":"stringify_info","v2_object":"{\\\"b\\\":123}","v2_string":"c","v2_number":"321","v2_array":"[\\\"a\\\",1,[\\\"subarray\\\"]]"'
                     );
                     done();
                 });
@@ -106,7 +75,7 @@ describe("Logger", () => {
             it("should stringify objects or array and transform other types into string before log WARN", (done) => {
                 spyOn(process.stdout,"write").and.callFake(log => {
                     expect(log).toContain(
-                        '"test":"stringify_warn","object":"{\\\"b\\\":123}","string":"c","number":"321","array":"[\\\"a\\\",1,[\\\"subarray\\\"]]"'
+                        '"v2_test":"stringify_warn","v2_object":"{\\\"b\\\":123}","v2_string":"c","v2_number":"321","v2_array":"[\\\"a\\\",1,[\\\"subarray\\\"]]"'
                     );
                     done();
                 });
@@ -116,7 +85,7 @@ describe("Logger", () => {
             it("should transform null or boolean fields into string", (done) => {
                 spyOn(process.stdout,"write").and.callFake(log => {
                     expect(log).toContain(
-                        '"test":"stringify_null","a":"null","b":"true"'
+                        '"v2_test":"stringify_null","v2_a":"null","v2_b":"true"'
                     );
                     done();
                 });
@@ -126,7 +95,7 @@ describe("Logger", () => {
             it("should stringify functions", (done) => {
                 spyOn(process.stdout,"write").and.callFake(log => {
                     expect(log).toContain(
-                        '"test":"stringify_functions","function":"function () {return true}"'
+                        '"v2_test":"stringify_functions","v2_function":"function () {return true}"'
                     );
                     done();
                 });
@@ -136,45 +105,81 @@ describe("Logger", () => {
             it("should add the correct loglevel string if no mergingObject is passed", (done) => {
                 spyOn(process.stdout,"write").and.callFake(log => {
                     expect(log).toContain(
-                        '"type":"test","context":"app","loglevel":"INFO","message":"Loglevel no mergingObject"'
+                        '"v2_type":"test","v2_context":"app","v2_loglevel":"INFO","v2_message":"Loglevel no mergingObject"'
                     );
                     done();
                 });
-                const logger = createLogger({ type: "test", context: "app"});
+                const logger = getLogger();
                 logger.info("Loglevel no mergingObject");
             });
             it("should add the correct loglevel string if mergingObject is passed", (done) => {
                 spyOn(process.stdout,"write").and.callFake(log => {
                     expect(log).toContain(
-                        '"type":"test","context":"app","a":"b","loglevel":"WARN","message":"Loglevel with mergingObject"'
+                        '"v2_type":"test","v2_context":"app","v2_a":"b","v2_loglevel":"WARN","v2_message":"Loglevel with mergingObject"'
                     );
                     done();
                 });
-                const logger = createLogger({ type: "test", context: "app" });
+                const logger = getLogger();
                 logger.warn({ "a": "b" }, "Loglevel with mergingObject");
-            });
-            it("should add the correct loglevel string if we are logging an error message", (done) => {
-                spyOn(process.stdout,"write").and.callFake(log => {
-                    expect(log).toContain(
-                        '"type":"test","context":"app","error_stack":"Error: Loglevel with error'
-                    );
-                    expect(log).toContain(
-                        '"loglevel":"ERROR","message":"Loglevel with error"'
-                    );
-                    done();
-                });
-                const logger = createLogger({ type: "test", context: "app" });
-                logger.error(new Error("Loglevel with error"));
             });
             it("should add loglevel = DEBUG for trace logs", (done) => {
                 spyOn(process.stdout,"write").and.callFake(log => {
                     expect(log).toContain(
-                        '"type":"test","context":"app","loglevel":"DEBUG","message":"Replace trace with debug"'
+                        '"v2_type":"test","v2_context":"app","v2_loglevel":"DEBUG","v2_message":"Replace trace with debug"'
                     );
                     done();
                 });
-                const logger = createLogger({ type: "test", context: "app" }, "trace");
+                const logger = getLogger("trace");
                 logger.trace("Replace trace with debug");
+            });
+
+            describe(`serialize Errors`, () => {
+                it("should add common error fields and error_message if log message is present", (done) => {
+                    spyOn(process.stdout,"write").and.callFake(log => {
+                        expect(log).toContain('"v2_message":"Error with log message"');
+                        expect(log).toContain('"v2_error_stack":"Error: This is an error');
+                        expect(log).toContain('"v2_error_message":"This is an error');
+                        expect(log).toContain('"v2_error_file"');
+                        expect(log).toContain('"v2_error_line"');
+                        expect(log).not.toContain('"v2_stack"');
+                        expect(log).not.toContain('"stack"');
+                        done();
+                    });
+                    const logger = getLogger();
+                    logger.error(new Error("This is an error"), "Error with log message");
+                });
+    
+                it("should add common error fields and use Error.message as message if log message is not present", (done) => {
+                    spyOn(process.stdout,"write").and.callFake(log => {
+                        expect(log).toContain('"v2_message":"Error without log message"');
+                        expect(log).toContain('"v2_error_stack":"Error: Error without log message');
+                        expect(log).toContain('"v2_error_file"');
+                        expect(log).toContain('"v2_error_line"');
+                        expect(log).not.toContain('"error_message"');
+                        expect(log).not.toContain('"v2_stack"');
+                        expect(log).not.toContain('"stack"');
+                        done();
+                    });
+                    const logger = getLogger();
+                    logger.error(new Error("Error without log message"));
+                });
+    
+                it("should add common error fields and use Error.message as message if log message is the Error", (done) => {
+                    spyOn(process.stdout,"write").and.callFake(log => {
+                        expect(log).toContain('"v2_a":"b"');
+                        expect(log).toContain('"v2_message":"Error as log message"');
+                        expect(log).toContain('"v2_error_stack":"Error: Error as log message');
+                        expect(log).toContain('"v2_error_file"');
+                        expect(log).toContain('"v2_error_line"');
+                        expect(log).not.toContain('"v2_error_message"');
+                        expect(log).not.toContain('"v2_stack"');
+                        expect(log).not.toContain('"stack"');
+                        done();
+                    });
+                    const logger = getLogger();
+                    logger.error({ "a": "b" }, new Error("Error as log message"));
+                    done();
+                });
             });
         });
     });
@@ -227,8 +232,54 @@ describe("Logger", () => {
                     expect(log).not.toContain('"loglevel"');
                     done();
                 });
-                const logger = createLogger({ type: "test", context: "access"});
+                const logger = getLogger();
                 logger.info("No loglevel added");
+            });
+
+            describe(`serialize Errors`, () => {
+                it("should add common error fields and error_message if log message is present", (done) => {
+                    spyOn(process.stdout,"write").and.callFake(log => {
+                        expect(log).toContain('"message":"Error with log message"');
+                        expect(log).toContain('"error_stack":"Error: This is an error');
+                        expect(log).toContain('"error_message":"This is an error');
+                        expect(log).toContain('"error_file"');
+                        expect(log).toContain('"error_line"');
+                        expect(log).not.toContain('"stack"');
+                        done();
+                    });
+                    const logger = getLogger();
+                    logger.error(new Error("This is an error"), "Error with log message");
+                });
+    
+                it("should add common error fields and use Error.message as message if log message is not present", (done) => {
+                    spyOn(process.stdout,"write").and.callFake(log => {
+                        expect(log).toContain('"message":"Error without log message"');
+                        expect(log).toContain('"error_stack":"Error: Error without log message');
+                        expect(log).toContain('"error_file"');
+                        expect(log).toContain('"error_line"');
+                        expect(log).not.toContain('"error_message"');
+                        expect(log).not.toContain('"stack"');
+                        done();
+                    });
+                    const logger = getLogger();
+                    logger.error(new Error("Error without log message"));
+                });
+    
+                it("should add common error fields and use Error.message as message if log message is the Error", (done) => {
+                    spyOn(process.stdout,"write").and.callFake(log => {
+                        expect(log).toContain('"a":"b"');
+                        expect(log).toContain('"message":"Error as log message"');
+                        expect(log).toContain('"error_stack":"Error: Error as log message');
+                        expect(log).toContain('"error_file"');
+                        expect(log).toContain('"error_line"');
+                        expect(log).not.toContain('"error_message"');
+                        expect(log).not.toContain('"stack"');
+                        done();
+                    });
+                    const logger = getLogger();
+                    logger.error({ "a": "b" }, new Error("Error as log message"));
+                    done();
+                });
             });
         });
     });
