@@ -55,8 +55,20 @@ logger.info(
 );
 ```
 will produce a log like:
-```
-{"level":30,"time":1566908680683,"v2_type":"test","v2_context":"app","v2_object":"{\"b\":123}","v2_string":"c","v2_number":"321","v2_array":"[\"a\",1,[\"subarray\"]]","v2_message":"Stringify log","v2_loglevel":"INFO","v":1}
+```js
+{ 
+   "level":30,
+   "time":1566908680683,
+   "v2_type":"test",
+   "v2_context":"app",
+   "v2_object":"{\"b\":123}",
+   "v2_string":"c",
+   "v2_number":"321",
+   "v2_array":"[\"a\",1,[\"subarray\"]]",
+   "v2_message":"Stringify log",
+   "v2_loglevel":"INFO",
+   "v":1
+}
 ```
 
 ### Access logger
@@ -74,8 +86,27 @@ logger.info(
 );
 ```
 will produce a log like:
-```
-{"level":30,"time":1566908953080,"type":"test","context":"access","object":{"b":123},"string":"c","number":321,"array":["a",1,["subarray"]],"message":"Don't stringify log","v":1}
+```js
+{
+   "level":30,
+   "time":1566908953080,
+   "type":"test",
+   "context":"access",
+   "object":{
+      "b":123
+   },
+   "string":"c",
+   "number":321,
+   "array":[
+      "a",
+      1,
+      [
+         "subarray"
+      ]
+   ],
+   "message":"Don't stringify log",
+   "v":1
+}
 ```
 
 ## Errors serializer
@@ -86,8 +117,20 @@ When you pass an error to the logger the possible scenarios are:
 logger.error(new Error("This is an error"), "Error with log message");
 ```
 will produce a log like:
-```
-{"level":50,"time":1567688722065,"type":"test","context":"app","error_message":"This is an error","error_stack":"Error: This is an error...","error_file":"...","error_line":"...","loglevel":"ERROR","message":"Error with log message","v":1}
+```js
+{
+   "level":50,
+   "time":1567688722065,
+   "type":"test",
+   "context":"app",
+   "error_message":"This is an error",
+   "error_stack":"Error: This is an error...",
+   "error_file":"...",
+   "error_line":"...",
+   "loglevel":"ERROR",
+   "message":"Error with log message",
+   "v":1
+}
 ```
 
 - the Error is passed as `mergingObject` (first param) and the log has not a `message` (second param). In this case the logger add [common error fields](#common-error-fields) to the `mergingObject` and use the `Error.message` as log `message`
@@ -95,8 +138,19 @@ will produce a log like:
 logger.error(new Error("Error without log message");
 ```
 will produce a log like:
-```
-{"level":50,"time":1567688853208,"type":"test","context":"app","error_stack":"Error: Error without log message...","error_file":"...","error_line":"...","loglevel":"ERROR","message":"Error without log message","v":1}
+```js
+{
+   "level":50,
+   "time":1567688853208,
+   "type":"test",
+   "context":"app",
+   "error_stack":"Error: Error without log message...",
+   "error_file":"...",
+   "error_line":"...",
+   "loglevel":"ERROR",
+   "message":"Error without log message",
+   "v":1
+}
 ```
 
 
@@ -105,8 +159,20 @@ will produce a log like:
 logger.error({ "a": "b" }, new Error("Error as log message"));
 ```
 will produce a log like:
-```
-"level":50,"time":1567689070052,"type":"test","context":"app","a":"b","error_stack":"Error: Error as log message...","error_file":"...","error_line":"...","loglevel":"ERROR","message":"Error as log message","v":1}
+```js
+{
+   "level":50,
+   "time":1567689070052,
+   "type":"test",
+   "context":"app",
+   "a":"b",
+   "error_stack":"Error: Error as log message...",
+   "error_file":"...",
+   "error_line":"...",
+   "loglevel":"ERROR",
+   "message":"Error as log message",
+   "v":1
+}
 ```
 
 ### Common error fields
