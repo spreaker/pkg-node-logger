@@ -179,6 +179,7 @@ will produce a log like:
 ```js
 {
     error_stack: "error stack trace",
+    error_code: "error code property",
     error_file: "path of the file",
     error_line: "number of the line"
 }
