@@ -32,11 +32,18 @@ const serializeToString = (key, obj) => {
 };
 
 const getErrorCommonFields = (obj) => {
-    return {
+    const error = {
         error_stack: obj.stackTrace,
         error_file: obj.fileName,
         error_line: obj.lineNumber
     }
+    // we don't return code field if not presents 
+    // to avoid printing a "null" string 
+    // caused by the serializeToString process
+    if (obj.code) {
+        error.error_code = obj.code;
+    }
+    return error;
 };
 
 /**

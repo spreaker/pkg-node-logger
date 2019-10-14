@@ -138,6 +138,7 @@ describe("Logger", () => {
                     spyOn(process.stdout,"write").and.callFake(log => {
                         expect(log).toContain('"v2_message":"Error with log message"');
                         expect(log).toContain('"v2_error_stack":"Error: This is an error');
+                        expect(log).toContain('"v2_error_code":"ERR_CODE"');
                         expect(log).toContain('"v2_error_message":"This is an error');
                         expect(log).toContain('"v2_error_file"');
                         expect(log).toContain('"v2_error_line"');
@@ -146,13 +147,16 @@ describe("Logger", () => {
                         done();
                     });
                     const logger = getLogger();
-                    logger.error(new Error("This is an error"), "Error with log message");
+                    const error = new Error("This is an error");
+                    error.code = "ERR_CODE";
+                    logger.error(error, "Error with log message");
                 });
     
                 it("should add common error fields and use Error.message as message if log message is not present", (done) => {
                     spyOn(process.stdout,"write").and.callFake(log => {
                         expect(log).toContain('"v2_message":"Error without log message"');
                         expect(log).toContain('"v2_error_stack":"Error: Error without log message');
+                        expect(log).toContain('"v2_error_code":"ERR_CODE"');
                         expect(log).toContain('"v2_error_file"');
                         expect(log).toContain('"v2_error_line"');
                         expect(log).not.toContain('"error_message"');
@@ -161,7 +165,9 @@ describe("Logger", () => {
                         done();
                     });
                     const logger = getLogger();
-                    logger.error(new Error("Error without log message"));
+                    const error = new Error("Error without log message");
+                    error.code = "ERR_CODE";
+                    logger.error(error);
                 });
     
                 it("should add common error fields and use Error.message as message if log message is the Error", (done) => {
@@ -169,6 +175,7 @@ describe("Logger", () => {
                         expect(log).toContain('"v2_a":"b"');
                         expect(log).toContain('"v2_message":"Error as log message"');
                         expect(log).toContain('"v2_error_stack":"Error: Error as log message');
+                        expect(log).toContain('"v2_error_code":"ERR_CODE"');
                         expect(log).toContain('"v2_error_file"');
                         expect(log).toContain('"v2_error_line"');
                         expect(log).not.toContain('"v2_error_message"');
@@ -177,8 +184,24 @@ describe("Logger", () => {
                         done();
                     });
                     const logger = getLogger();
-                    logger.error({ "a": "b" }, new Error("Error as log message"));
-                    done();
+                    const error = new Error("Error as log message");
+                    error.code = "ERR_CODE";
+                    logger.error({ "a": "b" }, error);
+                });
+                
+                it("should not add error code if not present in Error instance", (done) => {
+                    spyOn(process.stdout,"write").and.callFake(log => {
+                        expect(log).toContain('"v2_error_stack":"Error: Error without code');
+                        expect(log).toContain('"v2_error_file"');
+                        expect(log).toContain('"v2_error_line"');
+                        expect(log).not.toContain('"v2_error_message"');
+                        expect(log).not.toContain('"v2_error_code"');
+                        expect(log).not.toContain('"v2_stack"');
+                        expect(log).not.toContain('"stack"');
+                        done();
+                    });
+                    const logger = getLogger();
+                    logger.error(new Error("Error without code"));
                 });
             });
         });
@@ -241,6 +264,7 @@ describe("Logger", () => {
                     spyOn(process.stdout,"write").and.callFake(log => {
                         expect(log).toContain('"message":"Error with log message"');
                         expect(log).toContain('"error_stack":"Error: This is an error');
+                        expect(log).toContain('"error_code":"ERR_CODE"');
                         expect(log).toContain('"error_message":"This is an error');
                         expect(log).toContain('"error_file"');
                         expect(log).toContain('"error_line"');
@@ -248,13 +272,16 @@ describe("Logger", () => {
                         done();
                     });
                     const logger = getLogger();
-                    logger.error(new Error("This is an error"), "Error with log message");
+                    const error = new Error("This is an error");
+                    error.code = "ERR_CODE";
+                    logger.error(error, "Error with log message");
                 });
     
                 it("should add common error fields and use Error.message as message if log message is not present", (done) => {
                     spyOn(process.stdout,"write").and.callFake(log => {
                         expect(log).toContain('"message":"Error without log message"');
                         expect(log).toContain('"error_stack":"Error: Error without log message');
+                        expect(log).toContain('"error_code":"ERR_CODE"');
                         expect(log).toContain('"error_file"');
                         expect(log).toContain('"error_line"');
                         expect(log).not.toContain('"error_message"');
@@ -262,7 +289,9 @@ describe("Logger", () => {
                         done();
                     });
                     const logger = getLogger();
-                    logger.error(new Error("Error without log message"));
+                    const error = new Error("Error without log message");
+                    error.code = "ERR_CODE";
+                    logger.error(error);
                 });
     
                 it("should add common error fields and use Error.message as message if log message is the Error", (done) => {
@@ -270,6 +299,7 @@ describe("Logger", () => {
                         expect(log).toContain('"a":"b"');
                         expect(log).toContain('"message":"Error as log message"');
                         expect(log).toContain('"error_stack":"Error: Error as log message');
+                        expect(log).toContain('"error_code":"ERR_CODE"');
                         expect(log).toContain('"error_file"');
                         expect(log).toContain('"error_line"');
                         expect(log).not.toContain('"error_message"');
@@ -277,8 +307,24 @@ describe("Logger", () => {
                         done();
                     });
                     const logger = getLogger();
-                    logger.error({ "a": "b" }, new Error("Error as log message"));
+                    const error = new Error("Error as log message");
+                    error.code = "ERR_CODE";
+                    logger.error({ "a": "b" }, error);
                     done();
+                });
+
+                it("should not add error code if not present in Error instance", (done) => {
+                    spyOn(process.stdout,"write").and.callFake(log => {
+                        expect(log).toContain('"error_stack":"Error: Error without code');
+                        expect(log).toContain('"error_file"');
+                        expect(log).toContain('"error_line"');
+                        expect(log).not.toContain('"error_message"');
+                        expect(log).not.toContain('"error_code"');
+                        expect(log).not.toContain('"stack"');
+                        done();
+                    });
+                    const logger = getLogger();
+                    logger.error(new Error("Error without code"));
                 });
             });
         });
