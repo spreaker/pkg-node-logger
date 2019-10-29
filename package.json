@@ -1,6 +1,6 @@
 {
     "name": "@spreaker/logger",
-    "version": "2.1.1",
+    "version": "3.0.0",
     "description": "Pino-based wrapper with some extra capabilities.",
     "engines": {
         "node": ">=8"

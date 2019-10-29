@@ -4,7 +4,7 @@ const parseErrorStack = require("./parseErrorStack");
 /**
  * List of default field that should not be transformed by the serializer
 */
-const whitelist = ["time", "pid"];
+const whitelist = ["time", "pid", "type", "context", "loglevel", "message"];
 
 /**
  * Serializer to transform values into string

@@ -3,7 +3,7 @@
 Pino-based Logger that we use in all of Spreaker's nodeJS projects. 
 It's possible to create 2 different instances of the logger:
 
-- `Application Logger`: this is an instance of `Pino Logger`, initialized with `Spreaker's base options`, with a custom serializer that take care of stringify objects and array and transforming other types into string before log. All the fields are decorated with a prefix `v2_` to make them recognizables. The `Application Logger` add also a `v2_loglevel` field to each log to have a string version of the log level.
+- `Application Logger`: this is an instance of `Pino Logger`, initialized with `Spreaker's base options`, with a custom serializer that take care of stringify objects and array and transforming other types into string before log. All the fields are decorated with a prefix `v2_` to make them recognizables. The `Application Logger` add also a `loglevel` field to each log to have a string version of the log level.
 - `Access Logger`: this is an instance of `Pino Logger`, initialized with `Spreaker's base options`.
 
 Both the loggers provide a common functions:
@@ -59,14 +59,14 @@ will produce a log like:
 { 
    "level":30,
    "time":1566908680683,
-   "v2_type":"test",
-   "v2_context":"app",
+   "type":"test",
+   "context":"app",
+   "message":"Stringify log",
+   "loglevel":"INFO",
    "v2_object":"{\"b\":123}",
    "v2_string":"c",
    "v2_number":"321",
    "v2_array":"[\"a\",1,[\"subarray\"]]",
-   "v2_message":"Stringify log",
-   "v2_loglevel":"INFO",
    "v":1
 }
 ```
@@ -112,7 +112,7 @@ will produce a log like:
 ## Errors serializer
 When you pass an error to the logger the possible scenarios are:
 
-- the Error is passed as `mergingObject` (first param) and the log has already a `message` (second param). In this case the logger add field `"error_message": Error.message` and [common error fields](#common-error-fields) to the `mergingObject` and the log message is printed in the `message` field
+- the Error is passed as `mergingObject` (first param) and the log has already a `message` (second param). In this case the logger add field `"v2_error_message": Error.message` and [common error fields](#common-error-fields) to the `mergingObject` and the log message is printed in the `message` field
 ```js
 logger.error(new Error("This is an error"), "Error with log message");
 ```
@@ -123,12 +123,12 @@ will produce a log like:
    "time":1567688722065,
    "type":"test",
    "context":"app",
-   "error_message":"This is an error",
-   "error_stack":"Error: This is an error...",
-   "error_file":"...",
-   "error_line":"...",
    "loglevel":"ERROR",
    "message":"Error with log message",
+   "v2_error_message":"This is an error",
+   "v2_error_stack":"Error: This is an error...",
+   "v2_error_file":"...",
+   "v2_error_line":"...",
    "v":1
 }
 ```
@@ -144,11 +144,11 @@ will produce a log like:
    "time":1567688853208,
    "type":"test",
    "context":"app",
-   "error_stack":"Error: Error without log message...",
-   "error_file":"...",
-   "error_line":"...",
    "loglevel":"ERROR",
    "message":"Error without log message",
+   "v2_error_stack":"Error: Error without log message...",
+   "v2_error_file":"...",
+   "v2_error_line":"...",
    "v":1
 }
 ```
@@ -165,17 +165,27 @@ will produce a log like:
    "time":1567689070052,
    "type":"test",
    "context":"app",
-   "a":"b",
-   "error_stack":"Error: Error as log message...",
-   "error_file":"...",
-   "error_line":"...",
    "loglevel":"ERROR",
    "message":"Error as log message",
+   "v2_a":"b",
+   "v2_error_stack":"Error: Error as log message...",
+   "v2_error_file":"...",
+   "v2_error_line":"...",
    "v":1
 }
 ```
 
 ### Common error fields
+In application logs
+```js
+{
+    v2_error_stack: "error stack trace",
+    v2_error_code: "error code property",
+    v2_error_file: "path of the file",
+    v2_error_line: "number of the line"
+}
+```
+or in access logs
 ```js
 {
     error_stack: "error stack trace",
