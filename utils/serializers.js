@@ -11,18 +11,13 @@ const whitelist = ["time", "pid", "type", "context", "loglevel", "message"];
 */
 const serializeToString = (key, obj) => {
     if (whitelist.indexOf(key) === -1) {
-        // we create a new key with "v2_" prefix to recognize field serialized
-        // and avoid collision with old keys not serialized
-        const newKey = `v2_${key}`;
         // Try to stringify objects/array or transform other types in string
         try {
             if (typeof obj[key] === "object" || obj[key] instanceof Array) {
-                obj[newKey] = JSON.stringify(obj[key]);
+                obj[key] = JSON.stringify(obj[key]);
             } else {
-                obj[newKey] = String(obj[key]);
+                obj[key] = String(obj[key]);
             }
-            // if the process goes well we delete the not serialized key
-            delete obj[key];
         } 
         // in case of errors just return the current value
         catch(err) {

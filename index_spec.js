@@ -32,20 +32,10 @@ describe("Logger", () => {
                 }
                 return logger;
             }
-            it("should add 'v2_' prefix to all the fields, except for the whitelisted ones", (done) => {
-                spyOn(process.stdout,"write").and.callFake(log => {
-                    expect(log).toContain(
-                        '"type":"test","context":"app","time":123,"pid":"321","loglevel":"INFO","message":"Add prefix","v2_toPrefix":"field to be prefixed"'
-                    );
-                    done();
-                });
-                const logger = getLogger();
-                logger.info({"time":123,"pid":"321","toPrefix":"field to be prefixed"}, "Add prefix");
-            });
             it("should log the initial properties passed", (done) => {
                 spyOn(process.stdout,"write").and.callFake(log => {
                     expect(log).toContain(
-                        '"type":"test","context":"app","loglevel":"INFO","message":"Initial properties","v2_test":"initial_properties"'
+                        '"type":"test","context":"app","test":"initial_properties","loglevel":"INFO","message":"Initial properties"'
                     );
                     done();
                 });
@@ -65,7 +55,7 @@ describe("Logger", () => {
             it("should stringify objects or array and transform other types into string before log INFO", (done) => {
                 spyOn(process.stdout,"write").and.callFake(log => {
                     expect(log).toContain(
-                        '"v2_test":"stringify_info","v2_object":"{\\\"b\\\":123}","v2_string":"c","v2_number":"321","v2_array":"[\\\"a\\\",1,[\\\"subarray\\\"]]"'
+                        '"test":"stringify_info","object":"{\\\"b\\\":123}","string":"c","number":"321","array":"[\\\"a\\\",1,[\\\"subarray\\\"]]"'
                     );
                     done();
                 });
@@ -75,7 +65,7 @@ describe("Logger", () => {
             it("should stringify objects or array and transform other types into string before log WARN", (done) => {
                 spyOn(process.stdout,"write").and.callFake(log => {
                     expect(log).toContain(
-                        '"v2_test":"stringify_warn","v2_object":"{\\\"b\\\":123}","v2_string":"c","v2_number":"321","v2_array":"[\\\"a\\\",1,[\\\"subarray\\\"]]"'
+                        '"test":"stringify_warn","object":"{\\\"b\\\":123}","string":"c","number":"321","array":"[\\\"a\\\",1,[\\\"subarray\\\"]]"'
                     );
                     done();
                 });
@@ -85,7 +75,7 @@ describe("Logger", () => {
             it("should transform null or boolean fields into string", (done) => {
                 spyOn(process.stdout,"write").and.callFake(log => {
                     expect(log).toContain(
-                        '"v2_test":"stringify_null","v2_a":"null","v2_b":"true"'
+                        '"test":"stringify_null","a":"null","b":"true"'
                     );
                     done();
                 });
@@ -95,7 +85,7 @@ describe("Logger", () => {
             it("should stringify functions", (done) => {
                 spyOn(process.stdout,"write").and.callFake(log => {
                     expect(log).toContain(
-                        '"v2_test":"stringify_functions","v2_function":"function () {return true}"'
+                        '"test":"stringify_functions","function":"function () {return true}"'
                     );
                     done();
                 });
@@ -115,7 +105,7 @@ describe("Logger", () => {
             it("should add the correct loglevel string if mergingObject is passed", (done) => {
                 spyOn(process.stdout,"write").and.callFake(log => {
                     expect(log).toContain(
-                        '"type":"test","context":"app","loglevel":"WARN","message":"Loglevel with mergingObject","v2_a":"b"'
+                        '"type":"test","context":"app","a":"b","loglevel":"WARN","message":"Loglevel with mergingObject"'
                     );
                     done();
                 });
@@ -137,12 +127,11 @@ describe("Logger", () => {
                 it("should add common error fields and error_message if log message is present", (done) => {
                     spyOn(process.stdout,"write").and.callFake(log => {
                         expect(log).toContain('"message":"Error with log message"');
-                        expect(log).toContain('"v2_error_stack":"Error: This is an error');
-                        expect(log).toContain('"v2_error_code":"ERR_CODE"');
-                        expect(log).toContain('"v2_error_message":"This is an error');
-                        expect(log).toContain('"v2_error_file"');
-                        expect(log).toContain('"v2_error_line"');
-                        expect(log).not.toContain('"v2_stack"');
+                        expect(log).toContain('"error_stack":"Error: This is an error');
+                        expect(log).toContain('"error_code":"ERR_CODE"');
+                        expect(log).toContain('"error_message":"This is an error');
+                        expect(log).toContain('"error_file"');
+                        expect(log).toContain('"error_line"');
                         expect(log).not.toContain('"stack"');
                         done();
                     });
@@ -155,12 +144,11 @@ describe("Logger", () => {
                 it("should add common error fields and use Error.message as message if log message is not present", (done) => {
                     spyOn(process.stdout,"write").and.callFake(log => {
                         expect(log).toContain('"message":"Error without log message"');
-                        expect(log).toContain('"v2_error_stack":"Error: Error without log message');
-                        expect(log).toContain('"v2_error_code":"ERR_CODE"');
-                        expect(log).toContain('"v2_error_file"');
-                        expect(log).toContain('"v2_error_line"');
+                        expect(log).toContain('"error_stack":"Error: Error without log message');
+                        expect(log).toContain('"error_code":"ERR_CODE"');
+                        expect(log).toContain('"error_file"');
+                        expect(log).toContain('"error_line"');
                         expect(log).not.toContain('"error_message"');
-                        expect(log).not.toContain('"v2_stack"');
                         expect(log).not.toContain('"stack"');
                         done();
                     });
@@ -172,14 +160,13 @@ describe("Logger", () => {
     
                 it("should add common error fields and use Error.message as message if log message is the Error", (done) => {
                     spyOn(process.stdout,"write").and.callFake(log => {
-                        expect(log).toContain('"v2_a":"b"');
+                        expect(log).toContain('"a":"b"');
                         expect(log).toContain('"message":"Error as log message"');
-                        expect(log).toContain('"v2_error_stack":"Error: Error as log message');
-                        expect(log).toContain('"v2_error_code":"ERR_CODE"');
-                        expect(log).toContain('"v2_error_file"');
-                        expect(log).toContain('"v2_error_line"');
-                        expect(log).not.toContain('"v2_error_message"');
-                        expect(log).not.toContain('"v2_stack"');
+                        expect(log).toContain('"error_stack":"Error: Error as log message');
+                        expect(log).toContain('"error_code":"ERR_CODE"');
+                        expect(log).toContain('"error_file"');
+                        expect(log).toContain('"error_line"');
+                        expect(log).not.toContain('"error_message"');
                         expect(log).not.toContain('"stack"');
                         done();
                     });
@@ -191,12 +178,11 @@ describe("Logger", () => {
                 
                 it("should not add error code if not present in Error instance", (done) => {
                     spyOn(process.stdout,"write").and.callFake(log => {
-                        expect(log).toContain('"v2_error_stack":"Error: Error without code');
-                        expect(log).toContain('"v2_error_file"');
-                        expect(log).toContain('"v2_error_line"');
-                        expect(log).not.toContain('"v2_error_message"');
-                        expect(log).not.toContain('"v2_error_code"');
-                        expect(log).not.toContain('"v2_stack"');
+                        expect(log).toContain('"error_stack":"Error: Error without code');
+                        expect(log).toContain('"error_file"');
+                        expect(log).toContain('"error_line"');
+                        expect(log).not.toContain('"error_message"');
+                        expect(log).not.toContain('"error_code"');
                         expect(log).not.toContain('"stack"');
                         done();
                     });
